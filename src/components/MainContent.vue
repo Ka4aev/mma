@@ -8,6 +8,18 @@ import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import gsap from 'gsap'
 import {ScrollTrigger} from 'gsap/ScrollTrigger'
+import Memory1 from '@/assets/memory1.jpg'
+import Memory2 from '@/assets/memory2.jpg'
+import Memory3 from '@/assets/memory3.jpg'
+import Memory4 from '@/assets/memory4.jpg'
+import Memory5 from '@/assets/memory5.jpg'
+
+import Our1 from '@/assets/our1.jpg'
+import Our2 from '@/assets/our2.jpg'
+import Our3 from '@/assets/our3.jpg'
+import Our4 from '@/assets/our4.jpg'
+import Our5 from '@/assets/our5.jpg'
+import Our6 from '@/assets/our6.jpg'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -29,11 +41,11 @@ const updateTimeElapsed = () => {
 }
 
 const images = [
-  'src/assets/memory1.jpg',
-  'src/assets/memory2.jpg',
-  'src/assets/memory3.jpg',
-  'src/assets/memory4.jpg',
-  'src/assets/memory5.jpg',
+    Memory1,
+    Memory2,
+    Memory3,
+    Memory4,
+    Memory5,
 ]
 
 const reasons = [
@@ -47,32 +59,32 @@ const reasons = [
 
 const memories = [
   {
-    image: 'src/assets/our1.jpg',
+    image: Our1,
     title: 'День студентов',
     description: 'Момент, который я запомню на всю жизнь'
   },
   {
-    image: 'src/assets/our2.jpg',
+    image: Our2,
     title: 'Поездка в саратов',
     description: 'Поездка, которая очень сблизила нас, запомнилась теплыми воспоминаниями'
   },
   {
-    image: 'src/assets/our3.jpg',
+    image: Our3,
     title: 'Лепили из пластилина',
     description: 'Мне очень сильно понравилось, это мило заниматься чем то подобным с любимым человеком'
   },
   {
-    image: 'src/assets/our4.jpg',
+    image: Our4,
     title: 'Наша прогулка летом',
     description: 'Мне зашло <3'
   },
   {
-    image: 'src/assets/our5.jpg',
+    image: Our5,
     title: '2 годика вместе',
     description: 'Огромное спасибо за подарок - он такой же тёплый и милый, как и эти два года, которые ты делаешь особенными!'
   },
   {
-    image: 'src/assets/our6.jpg',
+    image: Our6,
     title: 'Мои 18 годиков',
     description: 'Я рад что ты была рядом'
   }
@@ -222,7 +234,7 @@ onMounted(() => {
     <div class="content-section relative overflow-hidden h-[400px]">
       <div
           class="absolute inset-0 bg-cover bg-center"
-          style="background: url('src/assets/first-block.jpg') no-repeat center center  fixed;')"
+          style="background: url('@/assets/first-block.jpg') no-repeat center center  fixed;')"
       ></div>
       <div class="absolute inset-0 bg-black bg-opacity-40"></div>
       <div class="relative z-10 flex flex-col items-center justify-center h-full text-white p-8">
@@ -300,7 +312,7 @@ onMounted(() => {
         </div>
         <div class="w-full md:w-1/2">
           <img
-              src="../assets/block2.jpg"
+              src="@/assets/block2.jpg"
               alt="Shipping Container"
               class="w-full h-[400px] object-cover rounded-lg shadow-lg"
           />
@@ -311,7 +323,7 @@ onMounted(() => {
       <div class="flex flex-col-reverse md:flex-row items-center gap-8">
         <div class="w-full md:w-1/2">
           <img
-              src="../assets/block1.jpg"
+              src="@/assets/block1.jpg"
               alt="Future Cargo"
               class="w-full h-[400px] object-cover rounded-lg shadow-lg"
           />
@@ -403,7 +415,7 @@ onMounted(() => {
       </p>
       <div class="w-full max-w-md">
         <img
-            src="../assets/flower.jpg"
+            src="@/assets/flower.jpg"
             alt="Цветок нашей любви"
             class="rounded-lg shadow-md w-full h-auto object-cover"
         >
