@@ -234,7 +234,7 @@ onMounted(() => {
     <div class="content-section relative overflow-hidden h-[400px]">
       <div
           class="absolute inset-0 bg-cover bg-center"
-          style="background: url('@/assets/first-block.jpg') no-repeat center center  fixed;')"
+          style="background: url('assets/first-block.jpg') no-repeat center center fixed;')"
       ></div>
       <div class="absolute inset-0 bg-black bg-opacity-40"></div>
       <div class="relative z-10 flex flex-col items-center justify-center h-full text-white p-8">
