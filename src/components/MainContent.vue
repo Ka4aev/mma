@@ -29,7 +29,7 @@ const showLightbox = ref(false)
 const selectedImage = ref(null)
 const timeElapsed = ref({days: 0, hours: 0, minutes: 0, seconds: 0})
 const openQuestions = ref([])
-const showContent = ref(false)
+const showContent = ref(true)
 
 const startDate = new Date('2022-09-14T00:00:00')
 
@@ -42,10 +42,10 @@ const updateTimeElapsed = () => {
   const seconds = Math.floor((diff % (1000 * 60)) / 1000)
   timeElapsed.value = {days, hours, minutes, seconds}
 
-  if (days >= 1000 && hours === 0 && minutes === 0 && seconds === 0 && !showContent.value) {
-    showContent.value = true
-    celebrate()
-  }
+  // if (days >= 1000 && hours === 0 && minutes === 0 && seconds === 0 && !showContent.value) {
+    // showContent.value = true
+    // celebrate()
+  // }
 }
 
 const celebrate = () => {
@@ -285,6 +285,13 @@ onMounted(() => {
     <div class="hearts-container">
       <div v-for="n in 30" :key="n" class="heart">❤️</div>
     </div>
+
+    <button 
+      @click="celebrate"
+      class="fixed bottom-[50px] right-[50px] bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-50 z-50"
+    >
+      Уря
+    </button>
 
     <!-- Hero Section with Counter -->
     <div class="content-section">
