@@ -1,7 +1,8 @@
 <script setup>
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, computed, onUnmounted} from 'vue'
 import {Swiper, SwiperSlide} from 'swiper/vue'
 import {EffectCoverflow, Navigation, Pagination} from 'swiper/modules'
+import confetti from 'canvas-confetti'
 import 'swiper/css'
 import 'swiper/css/effect-coverflow'
 import 'swiper/css/navigation'
@@ -20,6 +21,7 @@ import Our3 from '@/assets/our3.jpg'
 import Our4 from '@/assets/our4.jpg'
 import Our5 from '@/assets/our5.jpg'
 import Our6 from '@/assets/our6.jpg'
+import yraAudio from '../assets/audio/yra.mp3'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -27,6 +29,7 @@ const showLightbox = ref(false)
 const selectedImage = ref(null)
 const timeElapsed = ref({days: 0, hours: 0, minutes: 0, seconds: 0})
 const openQuestions = ref([])
+const showContent = ref(false)
 
 const startDate = new Date('2022-09-14T00:00:00')
 
@@ -38,6 +41,87 @@ const updateTimeElapsed = () => {
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
   const seconds = Math.floor((diff % (1000 * 60)) / 1000)
   timeElapsed.value = {days, hours, minutes, seconds}
+
+  if (days >= 1000 && hours === 0 && minutes === 0 && seconds === 0 && !showContent.value) {
+    showContent.value = true
+    celebrate()
+  }
+}
+
+const celebrate = () => {
+  // Воспроизводим аудио
+  const audio = new Audio(yraAudio)
+  audio.volume = 0.5
+  audio.play().catch(error => console.log('Audio playback failed:', error))
+
+  // Запускаем фейерверк
+  const duration = 8 * 1000
+  const animationEnd = Date.now() + duration
+  const defaults = { 
+    startVelocity: 30, 
+    spread: 360, 
+    ticks: 60, 
+    zIndex: 9999,
+    colors: ['#ff0000', '#ff69b4', '#ff1493', '#ff69b4', '#ff0000']
+  }
+
+  function randomInRange(min, max) {
+    return Math.random() * (max - min) + min
+  }
+
+  const interval = setInterval(function() {
+    const timeLeft = animationEnd - Date.now()
+
+    if (timeLeft <= 0) {
+      return clearInterval(interval)
+    }
+
+    const particleCount = 50 * (timeLeft / duration)
+    
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+    })
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+    })
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: randomInRange(0.4, 0.6), y: Math.random() - 0.2 }
+    })
+  }, 250)
+
+  const hearts = document.querySelectorAll('.heart')
+  hearts.forEach((heart, index) => {
+    const startX = Math.random() * window.innerWidth
+    const size = Math.random() * 1.5 + 0.5
+    const delay = Math.random() * 2
+
+    gsap.set(heart, {
+      x: startX,
+      y: window.innerHeight + 50,
+      scale: size,
+      opacity: 1
+    })
+
+    gsap.to(heart, {
+      y: -100,
+      opacity: 0,
+      duration: 4,
+      delay: delay,
+      ease: 'power1.out',
+      onComplete: () => {
+        gsap.set(heart, { 
+          y: window.innerHeight + 50,
+          opacity: 1
+        })
+      }
+    })
+  })
 }
 
 const images = [
@@ -197,6 +281,11 @@ onMounted(() => {
 
 <template>
   <div class="py-4 sm:py-8">
+    <!-- Hearts Animation Container -->
+    <div class="hearts-container">
+      <div v-for="n in 30" :key="n" class="heart">❤️</div>
+    </div>
+
     <!-- Hero Section with Counter -->
     <div class="content-section">
       <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 mb-6 sm:mb-12">Вместе навсегда</h1>
@@ -223,190 +312,193 @@ onMounted(() => {
       </p>
     </div>
 
-    <!-- Love Declaration Section -->
-    <div class="content-section relative overflow-hidden h-[300px] sm:h-[400px]">
-      <div class="absolute inset-0 bg-cover bg-center bg-banner"></div>
-      <div class="absolute inset-0 bg-black bg-opacity-40"></div>
-      <div class="relative z-10 flex flex-col items-center justify-center h-full text-white p-4 sm:p-8">
-        <h2 class="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6">Я люблю тебя</h2>
-        <p class="text-base sm:text-lg max-w-2xl text-center">
-          Ты - мое самое большое счастье. Каждый день рядом с тобой наполнен смыслом и радостью.
-          Ты делаешь меня лучше, вдохновляешь на новые свершения и даришь unconditional love.
-        </p>
-      </div>
-    </div>
-
-    <!-- Reasons Section -->
-    <div class="content-section">
-      <h2 class="section-title text-2xl sm:text-3xl">Почему я тебя люблю</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div v-for="(reason, index) in reasons" :key="index" 
-             class="bg-gray-50 p-4 sm:p-6 rounded-lg">
-          <div class="feature-circle mx-auto">
-            <svg class="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-            </svg>
-          </div>
-          <p class="text-center text-gray-700 text-sm sm:text-base">{{ reason }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Photo Slider Section -->
-    <div class="content-section">
-      <h2 class="section-title text-2xl sm:text-3xl">Красивые мы</h2>
-      <Swiper
-        :modules="[EffectCoverflow, Navigation, Pagination]"
-        :effect="'coverflow'"
-        :grabCursor="true"
-        :centeredSlides="true"
-        slidesPerView="auto"
-        :coverflowEffect="{
-          rotate: 50,
-          stretch: 0,
-          depth: 100,
-          modifier: 1,
-          slideShadows: true,
-        }"
-        :pagination="true"
-        :navigation="true"
-        class="w-full max-w-4xl mx-auto"
-      >
-        <SwiperSlide v-for="(image, index) in images" :key="index" class="w-56 sm:w-72">
-          <img
-            :src="image"
-            class="w-full h-40 sm:h-56 object-cover rounded-lg cursor-pointer shadow-md"
-            @click="openLightbox(image)"
-            alt="image"
-          />
-        </SwiperSlide>
-      </Swiper>
-    </div>
-
-    <!-- Future & Past Section -->
-    <div class="content-section">
-      <h2 class="section-title text-2xl sm:text-3xl">Наше прошлое и будущее</h2>
-      
-      <!-- First Block - Text Left, Image Right -->
-      <div class="flex flex-col md:flex-row items-center gap-4 sm:gap-8 mb-8 sm:mb-12">
-        <div class="w-full md:w-1/2 p-4 sm:p-6">
-          <h3 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">Наше прошлое</h3>
-          <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
-            Я бесконечно счастлив, что судьба подарила мне столько прекрасных моментов с тобой. Каждый день, проведенный вместе, был особенным и незабываемым. Помню наши первые встречи, прогулки по городу, совместные поездки и те теплые вечера, когда мы просто лежали и смотрели сериалы. Ты научила меня ценить каждое мгновение и показала, что значит быть по-настоящему счастливым.
-          </p>
-          <p class="text-sm sm:text-base text-gray-600">
-            С тобой я стал лучше, добрее и сильнее. Ты всегда поддерживала меня в трудные моменты, верила в меня и помогала расти. Наши совместные воспоминания - это самое ценное, что у меня есть, и я благодарен за каждый момент, проведенный рядом с тобой.
-          </p>
-        </div>
-        <div class="w-full md:w-1/2">
-          <img 
-            src="@/assets/block2.jpg"
-            alt="Наши воспоминания" 
-            class="w-full h-[300px] sm:h-[400px] object-cover rounded-lg shadow-lg"
-          />
-        </div>
-      </div>
-
-      <!-- Second Block - Image Left, Text Right -->
-      <div class="flex flex-col-reverse md:flex-row items-center gap-4 sm:gap-8">
-        <div class="w-full md:w-1/2">
-          <img 
-            src="@/assets/block1.jpg"
-            alt="Наше будущее" 
-            class="w-full h-[300px] sm:h-[400px] object-cover rounded-lg shadow-lg"
-          />
-        </div>
-        <div class="w-full md:w-1/2 p-4 sm:p-6">
-          <h3 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">Наше будущее</h3>
-          <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
-            В будущем я хочу вместе с тобой путешествовать по разным городам и странам, пробовать новую еду в разных ресторанах, смотреть новые сериалы и аниме, которые ты так любишь. Мечтаю о нашей уютной квартире, где мы будем жить вместе с маленьким котенком, как в тех милых видео из TikTok про пары, которые съехались.
-          </p>
-          <p class="text-sm sm:text-base text-gray-600">
-            Хочу просыпаться рядом с тобой каждое утро, готовить вместе завтрак, планировать наши выходные и создавать новые воспоминания. Мечтаю о том, как мы будем вместе расти, развиваться и становиться лучше, поддерживая друг друга во всех начинаниях. Ты - мое настоящее и будущее, и я хочу прожить с тобой всю жизнь, наполненную любовью, радостью и счастьем.
+    <!-- Rest of the content -->
+    <div v-if="showContent" class="content-wrapper">
+      <!-- Love Declaration Section -->
+      <div class="content-section relative overflow-hidden h-[300px] sm:h-[400px]">
+        <div class="absolute inset-0 bg-cover bg-center bg-banner"></div>
+        <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div class="relative z-10 flex flex-col items-center justify-center h-full text-white p-4 sm:p-8">
+          <h2 class="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6">Я люблю тебя</h2>
+          <p class="text-base sm:text-lg max-w-2xl text-center">
+            Ты - мое самое большое счастье. Каждый день рядом с тобой наполнен смыслом и радостью.
+            Ты делаешь меня лучше, вдохновляешь на новые свершения и даришь unconditional love.
           </p>
         </div>
       </div>
-    </div>
 
-    <!-- Memories Section -->
-    <div class="content-section">
-      <h2 class="section-title text-2xl sm:text-3xl">Особенные воспоминания</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div
-          v-for="(memory, index) in memories"
-          :key="index"
-          class="bg-gray-50 rounded-lg overflow-hidden shadow-sm transition-transform hover:scale-105 duration-300"
-        >
-          <img :src="memory.image" class="w-full h-40 sm:h-48 object-cover" @click="openLightbox(memory.image)"/>
-          <div class="p-4 sm:p-6">
-            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">{{ memory.title }}</h3>
-            <p class="text-sm sm:text-base text-gray-600">{{ memory.description }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- FAQ Section -->
-    <div class="py-8 sm:py-16">
-      <div class="w-full mx-auto space-y-3 sm:space-y-4">
-        <div 
-          v-for="(question, index) in questions" 
-          :key="index"
-          class="w-full bg-white rounded-[20px] shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer"
-          @click="toggleQuestion(index)"
-        >
-          <div class="w-full px-4 sm:px-8 py-4 sm:py-6 text-left flex justify-between items-center">
-            <span class="text-base sm:text-[18px] font-medium text-[#1E293B]">{{ question.title }}</span>
-            <div 
-              class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center transition-transform duration-300"
-              :class="{ 'rotate-180': visibleAnswers.has(index) }"
-            >
-              <svg 
-                class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400"
-                :class="{ 'text-orange-500': visibleAnswers.has(index) }"
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor"
-              >
-                <path 
-                  stroke-linecap="round" 
-                  stroke-linejoin="round" 
-                  stroke-width="2" 
-                  d="M19 9l-7 7-7-7"
-                />
+      <!-- Reasons Section -->
+      <div class="content-section">
+        <h2 class="section-title text-2xl sm:text-3xl">Почему я тебя люблю</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div v-for="(reason, index) in reasons" :key="index" 
+               class="bg-gray-50 p-4 sm:p-6 rounded-lg">
+            <div class="feature-circle mx-auto">
+              <svg class="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
               </svg>
             </div>
+            <p class="text-center text-gray-700 text-sm sm:text-base">{{ reason }}</p>
           </div>
+        </div>
+      </div>
+
+      <!-- Photo Slider Section -->
+      <div class="content-section">
+        <h2 class="section-title text-2xl sm:text-3xl">Красивые мы</h2>
+        <Swiper
+          :modules="[EffectCoverflow, Navigation, Pagination]"
+          :effect="'coverflow'"
+          :grabCursor="true"
+          :centeredSlides="true"
+          slidesPerView="auto"
+          :coverflowEffect="{
+            rotate: 50,
+            stretch: 0,
+            depth: 100,
+            modifier: 1,
+            slideShadows: true,
+          }"
+          :pagination="true"
+          :navigation="true"
+          class="w-full max-w-4xl mx-auto"
+        >
+          <SwiperSlide v-for="(image, index) in images" :key="index" class="w-56 sm:w-72">
+            <img
+              :src="image"
+              class="w-full h-40 sm:h-56 object-cover rounded-lg cursor-pointer shadow-md"
+              @click="openLightbox(image)"
+              alt="image"
+            />
+          </SwiperSlide>
+        </Swiper>
+      </div>
+
+      <!-- Future & Past Section -->
+      <div class="content-section">
+        <h2 class="section-title text-2xl sm:text-3xl">Наше прошлое и будущее</h2>
+        
+        <!-- First Block - Text Left, Image Right -->
+        <div class="flex flex-col md:flex-row items-center gap-4 sm:gap-8 mb-8 sm:mb-12">
+          <div class="w-full md:w-1/2 p-4 sm:p-6">
+            <h3 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">Наше прошлое</h3>
+            <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
+              Я бесконечно счастлив, что судьба подарила мне столько прекрасных моментов с тобой. Каждый день, проведенный вместе, был особенным и незабываемым. Помню наши первые встречи, прогулки по городу, совместные поездки и те теплые вечера, когда мы просто лежали и смотрели сериалы. Ты научила меня ценить каждое мгновение и показала, что значит быть по-настоящему счастливым.
+            </p>
+            <p class="text-sm sm:text-base text-gray-600">
+              С тобой я стал лучше, добрее и сильнее. Ты всегда поддерживала меня в трудные моменты, верила в меня и помогала расти. Наши совместные воспоминания - это самое ценное, что у меня есть, и я благодарен за каждый момент, проведенный рядом с тобой.
+            </p>
+          </div>
+          <div class="w-full md:w-1/2">
+            <img 
+              src="@/assets/block2.jpg"
+              alt="Наши воспоминания" 
+              class="w-full h-[300px] sm:h-[400px] object-cover rounded-lg shadow-lg"
+            />
+          </div>
+        </div>
+
+        <!-- Second Block - Image Left, Text Right -->
+        <div class="flex flex-col-reverse md:flex-row items-center gap-4 sm:gap-8">
+          <div class="w-full md:w-1/2">
+            <img 
+              src="@/assets/block1.jpg"
+              alt="Наше будущее" 
+              class="w-full h-[300px] sm:h-[400px] object-cover rounded-lg shadow-lg"
+            />
+          </div>
+          <div class="w-full md:w-1/2 p-4 sm:p-6">
+            <h3 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">Наше будущее</h3>
+            <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
+              В будущем я хочу вместе с тобой путешествовать по разным городам и странам, пробовать новую еду в разных ресторанах, смотреть новые сериалы и аниме, которые ты так любишь. Мечтаю о нашей уютной квартире, где мы будем жить вместе с маленьким котенком, как в тех милых видео из TikTok про пары, которые съехались.
+            </p>
+            <p class="text-sm sm:text-base text-gray-600">
+              Хочу просыпаться рядом с тобой каждое утро, готовить вместе завтрак, планировать наши выходные и создавать новые воспоминания. Мечтаю о том, как мы будем вместе расти, развиваться и становиться лучше, поддерживая друг друга во всех начинаниях. Ты - мое настоящее и будущее, и я хочу прожить с тобой всю жизнь, наполненную любовью, радостью и счастьем.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Memories Section -->
+      <div class="content-section">
+        <h2 class="section-title text-2xl sm:text-3xl">Особенные воспоминания</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div
-            class="overflow-hidden transition-all duration-300 ease-in-out"
-            :style="{ 
-              maxHeight: visibleAnswers.has(index) ? '500px' : '0',
-              opacity: visibleAnswers.has(index) ? '1' : '0',
-              transform: `translateY(${visibleAnswers.has(index) ? '0' : '-8px'})`,
-            }"
+            v-for="(memory, index) in memories"
+            :key="index"
+            class="bg-gray-50 rounded-lg overflow-hidden shadow-sm transition-transform hover:scale-105 duration-300"
           >
-            <div class="px-4 sm:px-8 pb-4 sm:pb-6">
-              <p class="text-sm sm:text-[16px] text-[#475569] leading-relaxed">{{ question.answer }}</p>
+            <img :src="memory.image" class="cursor-pointer w-full h-40 sm:h-48 object-cover" @click="openLightbox(memory.image)"/>
+            <div class="p-4 sm:p-6">
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">{{ memory.title }}</h3>
+              <p class="text-sm sm:text-base text-gray-600">{{ memory.description }}</p>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Final Section -->
-    <div class="flex flex-col items-center justify-center py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
-      <p class="text-base sm:text-lg md:text-xl font-medium text-center text-gray-800 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
-        Я хочу провести с ней всё будущее, которое нам предначертано, все поездки отдыхать, все скуф-выходные, все серии 'мама в 16', все среды в KFC.
-        Каждый день рядом с ней - это дар, и я бесконечно благодарен судьбе
-        за эти отношения, наполненные смехом, теплом и взаимопониманием.
-      </p>
-      <div class="w-full max-w-sm sm:max-w-md">
-        <img
-          src="@/assets/flower.jpg"
-          alt="Цветок нашей любви"
-          class="rounded-lg shadow-md w-full h-auto object-cover"
-        >
+      <!-- FAQ Section -->
+      <div class="py-8 sm:py-16">
+        <div class="w-full mx-auto space-y-3 sm:space-y-4">
+          <div 
+            v-for="(question, index) in questions" 
+            :key="index"
+            class="w-full bg-white rounded-[20px] shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer"
+            @click="toggleQuestion(index)"
+          >
+            <div class="w-full px-4 sm:px-8 py-4 sm:py-6 text-left flex justify-between items-center">
+              <span class="text-base sm:text-[18px] font-medium text-[#1E293B]">{{ question.title }}</span>
+              <div 
+                class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center transition-transform duration-300"
+                :class="{ 'rotate-180': visibleAnswers.has(index) }"
+              >
+                <svg 
+                  class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400"
+                  :class="{ 'text-orange-500': visibleAnswers.has(index) }"
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    stroke-width="2" 
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div
+              class="overflow-hidden transition-all duration-300 ease-in-out"
+              :style="{ 
+                maxHeight: visibleAnswers.has(index) ? '500px' : '0',
+                opacity: visibleAnswers.has(index) ? '1' : '0',
+                transform: `translateY(${visibleAnswers.has(index) ? '0' : '-8px'})`,
+              }"
+            >
+              <div class="px-4 sm:px-8 pb-4 sm:pb-6">
+                <p class="text-sm sm:text-[16px] text-[#475569] leading-relaxed">{{ question.answer }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final Section -->
+      <div class="flex flex-col items-center justify-center py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+        <p class="text-base sm:text-lg md:text-xl font-medium text-center text-gray-800 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
+          Я хочу провести с ней всё будущее, которое нам предначертано, все поездки отдыхать, все скуф-выходные, все серии 'мама в 16', все среды в KFC.
+          Каждый день рядом с ней - это дар, и я бесконечно благодарен судьбе
+          за эти отношения, наполненные смехом, теплом и взаимопониманием.
+        </p>
+        <div class="w-full max-w-sm sm:max-w-md">
+          <img
+            src="@/assets/flower.jpg"
+            alt="Цветок нашей любви"
+            class="rounded-lg shadow-md w-full h-auto object-cover"
+          >
+        </div>
       </div>
     </div>
 
@@ -518,5 +610,48 @@ onMounted(() => {
   .feature-icon {
     @apply w-5 h-5;
   }
+}
+
+.hearts-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.heart {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0;
+  will-change: transform;
+  filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.5));
+}
+
+.content-wrapper {
+  animation: fadeIn 1s ease-out;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Добавляем стили для контента, чтобы он был поверх сердечек */
+.content-section {
+  position: relative;
+  z-index: 2;
+  background: white;
 }
 </style> 
