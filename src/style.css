@@ -9,6 +9,10 @@
 }
 
 @layer components {
+  .password-input {
+    @apply w-14 h-14 text-center text-xl border-2 border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 transition-colors bg-white shadow-sm;
+  }
+  
   .btn-primary {
     @apply px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors transform hover:scale-105;
   }
@@ -51,11 +55,6 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #ffe4ef; /* нежно-розовый фон */
-}
-
-.bg-gray-50 {
-  background-color: transparent !important;
 }
 
 #app {
