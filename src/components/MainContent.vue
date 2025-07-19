@@ -288,7 +288,7 @@ onMounted(() => {
 
     <button 
       @click="celebrate"
-      class="fixed bottom-[50px] right-[50px] bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-50 z-50"
+      class="fixed bottom-[30px] right-[30px] bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-50 z-50"
     >
       Уря
     </button>
