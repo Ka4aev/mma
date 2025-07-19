@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onMounted, computed, onUnmounted} from 'vue'
+import {ref, onMounted, computed, onUnmounted, nextTick} from 'vue'
 import {Swiper, SwiperSlide} from 'swiper/vue'
 import {EffectCoverflow, Navigation, Pagination} from 'swiper/modules'
 import confetti from 'canvas-confetti'
@@ -9,43 +9,84 @@ import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import gsap from 'gsap'
 import {ScrollTrigger} from 'gsap/ScrollTrigger'
+import yraAudio from '../assets/audio/yra.mp3'
 import Memory1 from '@/assets/memory1.jpg'
 import Memory2 from '@/assets/memory2.jpg'
 import Memory3 from '@/assets/memory3.jpg'
 import Memory4 from '@/assets/memory4.jpg'
 import Memory5 from '@/assets/memory5.jpg'
+import Memory6 from '@/assets/memory6.jpg'
+import Memory7 from '@/assets/memory7.jpg'
+import Memory8 from '@/assets/memory8.jpg'
+import Memory9 from '@/assets/memory9.jpg'
+import Memory10 from '@/assets/memory10.jpg'
 
-import Our1 from '@/assets/our1.jpg'
-import Our2 from '@/assets/our2.jpg'
-import Our3 from '@/assets/our3.jpg'
-import Our4 from '@/assets/our4.jpg'
-import Our5 from '@/assets/our5.jpg'
-import Our6 from '@/assets/our6.jpg'
-import yraAudio from '../assets/audio/yra.mp3'
+import Podarok from '@/assets/podarok.jpg'
+import Gift from '@/assets/gift.png'
 
+import Reason1 from '@/assets/reason1.jpg'
+import Reason2 from '@/assets/reason2.jpg'
+import Reason3 from '@/assets/reason3.jpg'
+import Reason4 from '@/assets/reason4.jpg'
+import Reason5 from '@/assets/reason5.jpg'
+import Reason6 from '@/assets/reason6.jpg'
+
+import HeartButton from './HeartButton.vue'
 gsap.registerPlugin(ScrollTrigger)
 
+const showGiftBox = ref(false)
 const showLightbox = ref(false)
 const selectedImage = ref(null)
 const timeElapsed = ref({days: 0, hours: 0, minutes: 0, seconds: 0})
 const openQuestions = ref([])
 const showContent = ref(true)
+const isBirthday = ref(false)
+let hasCelebrated = false
 
-const startDate = new Date('2022-09-14T00:00:00')
+// Проверяем, был ли уже праздник (celebrate) в localStorage
+if (localStorage.getItem('hasCelebratedBirthday2025') === 'true') {
+  hasCelebrated = true
+}
+
+// Новый таймер до 24:00 20.07.2025 по Томскому времени (UTC+7)
+const targetDate = new Date(Date.UTC(2025, 6, 19, 17, 0, 0)) // 24:00 Томск = 17:00 UTC 20 июля 2025
 
 const updateTimeElapsed = () => {
   const now = new Date()
-  const diff = now - startDate
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-  timeElapsed.value = {days, hours, minutes, seconds}
+  const diff = targetDate - now
+  let totalSeconds = Math.floor(diff / 1000)
+  // Сохраняем предыдущее значение времени
+  if (!updateTimeElapsed.prevTotalSeconds && updateTimeElapsed.prevTotalSeconds !== 0) {
+    updateTimeElapsed.prevTotalSeconds = totalSeconds
+  }
+  if (totalSeconds <= 0) {
+    isBirthday.value = true
+    // celebrate только если ровно в момент перехода через 0
+    if (!hasCelebrated && updateTimeElapsed.prevTotalSeconds > 0) {
+      celebrate()
+       const audio = new Audio(yraAudio)
+      audio.volume = 0.5
+      audio.play().catch(error => console.log('Audio playback failed:', error))
 
-  // if (days >= 1000 && hours === 0 && minutes === 0 && seconds === 0 && !showContent.value) {
-    // showContent.value = true
-    // celebrate()
-  // }
+      hasCelebrated = true
+      localStorage.setItem('hasCelebratedBirthday2025', 'true')
+    }
+    // Считаем время после наступления даты
+    totalSeconds = Math.abs(totalSeconds)
+  } else {
+    isBirthday.value = false
+    // Если время снова стало положительным, сбрасываем флаг (например, если дату изменили назад)
+    if (hasCelebrated) {
+      hasCelebrated = false
+      localStorage.removeItem('hasCelebratedBirthday2025')
+    }
+  }
+  updateTimeElapsed.prevTotalSeconds = totalSeconds * (isBirthday.value ? -1 : 1)
+  const days = Math.floor(totalSeconds / (60 * 60 * 24))
+  const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / (60 * 60))
+  const minutes = Math.floor((totalSeconds % (60 * 60)) / 60)
+  const seconds = totalSeconds % 60
+  timeElapsed.value = {days, hours, minutes, seconds}
 }
 
 const celebrate = () => {
@@ -130,58 +171,38 @@ const images = [
     Memory3,
     Memory4,
     Memory5,
+    Memory6,
+    Memory7,
+    Memory8,
+    Memory9,
+    Memory10,
+]
+const reasonsImg = [
+  Reason1,
+  Reason2,
+    Reason3,
+    Reason4,
+    Reason5,
+    Reason6,
 ]
 
 const reasons = [
-  'Ты радуешь меня каждый день',
-  'Ты действительно делаешь меня лучше',
-  'С тобой комфортнее, чем с кем-либо',
-  'Люблю, когда ты выдаешь свою кринжатину',
-  'Ты очень заботливая и вкусно готовишь',
-  'Ты понимаешь меня лучше всех'
-]
-
-const memories = [
-  {
-    image: Our1,
-    title: 'День студентов',
-    description: 'Момент, который я запомню на всю жизнь'
-  },
-  {
-    image: Our2,
-    title: 'Поездка в Саратов',
-    description: 'Поездка, которая очень сблизила нас, запомнилась теплыми воспоминаниями'
-  },
-  {
-    image: Our3,
-    title: 'Лепка из пластилина',
-    description: 'Мне очень сильно понравилось, это мило заниматься чем то подобным с любимым человеком'
-  },
-  {
-    image: Our4,
-    title: 'Наша прогулка летом',
-    description: 'Мне зашло <3'
-  },
-  {
-    image: Our5,
-    title: '2 годика вместе',
-    description: 'Огромное спасибо за подарок - он такой же тёплый и милый, как и эти два года, которые ты делаешь особенными!'
-  },
-  {
-    image: Our6,
-    title: 'Мои 18 годиков',
-    description: 'Я рад что ты была рядом'
-  }
+  'Постоянно играли вместе',
+  'Жили вместе',
+  'Вечные ночевки',
+  'Готовка вместе',
+  'Фотосессия',
+  'Горные лыжи'
 ]
 
 const questions = ref([
   {
     title: 'Как мы познакомились?',
-    answer: 'Наша история началась с встречи — когда я стоял с номером группы, и заметил тебя: ту самую улыбчивую девушку в очаровательной полосатой кофточке. Но по-настоящему всё закружилось позже: прогулки по саду ТГУ, тот вечер, когда ты провожала меня до остановки, наши долгие прогулки и разговоры в парках... Эти мгновения навсегда останутся в моём сердце.'
+    answer: 'Наше знакомство довольно банальное, но в то же время это череда необыкновенных совпадений - Знакомство на Новом Году.'
   },
   {
     title: 'Как мы начали встречаться?',
-    answer: 'Набережная, вечер, вопрос — и ее счастливый возглас, перекрывший даже шум города. Так начинались мы.'
+    answer: 'Наша история начинается с конца новогодних каникул. Время поджимало, нужно было действовать.'
   },
   {
       title: 'Чем она мне понравилась?',
@@ -221,60 +242,56 @@ const closeLightbox = () => {
   document.body.style.overflow = 'auto'
 }
 
+const miniPhotoIndex = ref(null)
+const miniPhotoPosition = ref({top: 0, left: 0})
+
+function openMiniPhoto(index) {
+  miniPhotoIndex.value = index
+  // Позиционируем мини-фото относительно сердечка
+  const rect = document.querySelector(`.reason-card:nth-child(${index + 1})`).getBoundingClientRect()
+  miniPhotoPosition.value = {
+    top: rect.bottom + window.scrollY + 8,
+    left: rect.left + window.scrollX - 20
+  }
+}
+function closeMiniPhoto() {
+  miniPhotoIndex.value = null
+}
+
+const reasonCards = ref([])
+const showFutureLetter = ref(false)
+
 onMounted(() => {
   updateTimeElapsed()
   setInterval(updateTimeElapsed, 1000)
 
-  // Animate title
-  gsap.from('.hero-title', {
-    y: 100,
-    opacity: 0,
-    duration: 1,
-    ease: 'back.out(1.7)'
-  })
-
-  // Animate counter
-  gsap.from('.counter-item', {
-    scale: 0,
-    opacity: 0,
-    duration: 0.8,
-    stagger: 0.2,
-    ease: 'back.out(1.7)'
-  })
-
-  // Animate reasons
-  gsap.from('.reason-item', {
-    scrollTrigger: {
-      trigger: '.reasons-section',
-      start: 'top center',
-    },
-    y: 50,
-    opacity: 0,
-    duration: 0.6,
-    stagger: 0.1
-  })
-
-  // Animate memories cards
-  gsap.from('.memory-card', {
-    scrollTrigger: {
-      trigger: '.memories-section',
-      start: 'top center',
-    },
-    y: 50,
-    opacity: 0,
-    duration: 0.8,
-    stagger: 0.2
-  })
-
-  // Animate final section
-  gsap.from('.final-section', {
-    scrollTrigger: {
-      trigger: '.final-section',
-      start: 'top center',
-    },
-    scale: 0.9,
-    opacity: 0,
-    duration: 1
+  // Удаляю анимации для несуществующих элементов, чтобы не было ошибок GSAP
+  // if (document.querySelector('.hero-title')) {
+  //   gsap.from('.hero-title', { ... })
+  // }
+  // if (document.querySelector('.counter-item')) {
+  //   gsap.from('.counter-item', { ... })
+  // }
+  // if (document.querySelector('.reason-item')) {
+  //   gsap.from('.reason-item', { ... })
+  // }
+  // if (document.querySelector('.memory-card')) {
+  //   gsap.from('.memory-card', { ... })
+  // }
+  // if (document.querySelector('.final-section')) {
+  //   gsap.from('.final-section', { ... })
+  // }
+  nextTick(() => {
+    if (reasonCards.value && reasonCards.value.length) {
+      reasonCards.value.forEach((el, i) => {
+        setTimeout(() => {
+          if (el) {
+            el.style.opacity = '1'
+            el.style.transform = 'scale(1)'
+          }
+        }, 120 + i * 120)
+      })
+    }
   })
 })
 </script>
@@ -286,16 +303,9 @@ onMounted(() => {
       <div v-for="n in 30" :key="n" class="heart">❤️</div>
     </div>
 
-    <button 
-      @click="celebrate"
-      class="fixed bottom-[50px] right-[50px] bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-50 z-50"
-    >
-      Уря
-    </button>
-
     <!-- Hero Section with Counter -->
     <div class="content-section">
-      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 mb-6 sm:mb-12">Вместе навсегда</h1>
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 mb-6 sm:mb-12">{{ isBirthday ? 'Тебе 19 лет уже:' : 'С днем рождения' }}</h1>
       <div class="flex flex-wrap justify-center gap-4 sm:gap-8 mb-6 sm:mb-8">
         <div class="bg-white px-4 sm:px-6 py-3 sm:py-4 rounded-lg shadow-sm text-center w-[calc(50%-1rem)] sm:w-auto">
           <div class="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">{{ timeElapsed.days }}</div>
@@ -315,44 +325,69 @@ onMounted(() => {
         </div>
       </div>
       <p class="text-center text-gray-600 text-base sm:text-lg">
-        Каждая минута с тобой - бесценна
+        С каждой минутой мы все старше
       </p>
     </div>
 
     <!-- Rest of the content -->
     <div v-if="showContent" class="content-wrapper">
       <!-- Love Declaration Section -->
-      <div class="content-section relative overflow-hidden h-[300px] sm:h-[400px]">
+      <div class="content-section relative overflow-hidden hero-block">
         <div class="absolute inset-0 bg-cover bg-center bg-banner"></div>
         <div class="absolute inset-0 bg-black bg-opacity-40"></div>
         <div class="relative z-10 flex flex-col items-center justify-center h-full text-white p-4 sm:p-8">
-          <h2 class="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6">Я люблю тебя</h2>
-          <p class="text-base sm:text-lg max-w-2xl text-center">
-            Ты - мое самое большое счастье. Каждый день рядом с тобой наполнен смыслом и радостью.
-            Ты делаешь меня лучше, вдохновляешь на новые свершения и даришь unconditional love.
+          <h2 class="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6">Маша, с днём рождения 🌿</h2>
+          <p class="text-base sm:text-lg max-w-2xl text-center hero-text">
+            Тебе сегодня 19 — и это не просто дата. Это момент, когда ты уже многое знаешь о себе, о людях, о жизни… и при этом остаёшься такой настоящей: с характером, эмоциями, яркостью, упрямством, теплом. Ты умеешь быть разной — и это круто.<br><br>
+            Я знаю, что мы с тобой не всегда простые. Иногда я туплю, иногда ты злишься. Но за всем этим — я правда хочу быть рядом. Хочу, чтобы тебе со мной было спокойно, легко, свободно. Хочу учиться быть лучше — не «идеальным», а настоящим и внимательным к тебе.<br><br>
+            Ты важный человек для меня. Ты умеешь заряжать, менять, трогать душу. Даже когда молчишь — ты говоришь многое.<br><br>
+            Спасибо тебе за это.<br><br>
+            С днём рождения, Маш.<br>
+            Пусть это будет год, в котором ты почувствуешь, что рядом есть те, кто видят тебя по-настоящему. Я стараюсь быть одним из них.<br><br>
+            <span style="display: inline-block; margin-top: 12px;">С тобой — Никита 🤍</span>
           </p>
         </div>
       </div>
 
+      <div style="display: flex; justify-content: center; margin: 24px 0;">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"
+          style="cursor: pointer;" @click="celebrate">
+          <path d="M24 43s-1.45-1.32-3.2-2.91C12.2 33.13 4 26.36 4 18.5 4 12.15 9.15 7 15.5 7c3.54 0 6.73 1.73 8.5 4.44C25.77 8.73 28.96 7 32.5 7 38.85 7 44 12.15 44 18.5c0 7.86-8.2 14.63-16.8 21.59C25.45 41.68 24 43 24 43z" fill="#f472b6"/>
+        </svg>
+      </div>
+
       <!-- Reasons Section -->
       <div class="content-section">
-        <h2 class="section-title text-2xl sm:text-3xl">Почему я тебя люблю</h2>
+        <h2 class="section-title text-2xl sm:text-3xl">Что было за год</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div v-for="(reason, index) in reasons" :key="index" 
-               class="bg-gray-50 p-4 sm:p-6 rounded-lg">
-            <div class="feature-circle mx-auto">
-              <svg class="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
+               class="bg-gray-50 p-4 z-1 sm:p-6 rounded-lg relative reason-card"
+               :style="{ minHeight: '180px', transition: 'transform 0.5s cubic-bezier(.4,0,.2,1), opacity 0.5s', opacity: 0, transform: 'scale(0.95)' }"
+               ref="reasonCards">
+            <div class="feature-circle mx-auto" v-if="miniPhotoIndex === null">
+              <HeartButton @click="() => openMiniPhoto(index)" :size="32" />
             </div>
-            <p class="text-center text-gray-700 text-sm sm:text-base">{{ reason }}</p>
+            <transition name="fade-scale">
+              <div v-if="miniPhotoIndex === index" class="mini-photo-popup">
+                <img :src="reasonsImg[index % reasonsImg.length]" class="mini-photo-img" />
+                <button @click.stop="closeMiniPhoto" class="mini-photo-close mini-photo-close-left">×</button>
+              </div>
+            </transition>
+            <p v-if="miniPhotoIndex === null" class="text-center z-0 text-gray-700 text-sm sm:text-base reason-text">{{ reason }}</p>
           </div>
         </div>
       </div>
-
+      <!-- Клик вне мини-фото закрывает его -->
+      <div v-if="miniPhotoIndex !== null" @click="closeMiniPhoto" style="position: fixed; inset: 0; z-index: 9;"></div>
+      <!-- Сердечко -->
+      <div style="display: flex; justify-content: center; margin: 24px 0;">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"
+          style="cursor: pointer;" @click="celebrate">
+          <path d="M24 43s-1.45-1.32-3.2-2.91C12.2 33.13 4 26.36 4 18.5 4 12.15 9.15 7 15.5 7c3.54 0 6.73 1.73 8.5 4.44C25.77 8.73 28.96 7 32.5 7 38.85 7 44 12.15 44 18.5c0 7.86-8.2 14.63-16.8 21.59C25.45 41.68 24 43 24 43z" fill="#f472b6"/>
+        </svg>
+      </div>
       <!-- Photo Slider Section -->
-      <div class="content-section">
+      <div class="content-section mt-16">
         <h2 class="section-title text-2xl sm:text-3xl">Красивые мы</h2>
         <Swiper
           :modules="[EffectCoverflow, Navigation, Pagination]"
@@ -381,71 +416,17 @@ onMounted(() => {
           </SwiperSlide>
         </Swiper>
       </div>
-
-      <!-- Future & Past Section -->
-      <div class="content-section">
-        <h2 class="section-title text-2xl sm:text-3xl">Наше прошлое и будущее</h2>
-        
-        <!-- First Block - Text Left, Image Right -->
-        <div class="flex flex-col md:flex-row items-center gap-4 sm:gap-8 mb-8 sm:mb-12">
-          <div class="w-full md:w-1/2 p-4 sm:p-6">
-            <h3 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">Наше прошлое</h3>
-            <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
-              Я бесконечно счастлив, что судьба подарила мне столько прекрасных моментов с тобой. Каждый день, проведенный вместе, был особенным и незабываемым. Помню наши первые встречи, прогулки по городу, совместные поездки и те теплые вечера, когда мы просто лежали и смотрели сериалы. Ты научила меня ценить каждое мгновение и показала, что значит быть по-настоящему счастливым.
-            </p>
-            <p class="text-sm sm:text-base text-gray-600">
-              С тобой я стал лучше, добрее и сильнее. Ты всегда поддерживала меня в трудные моменты, верила в меня и помогала расти. Наши совместные воспоминания - это самое ценное, что у меня есть, и я благодарен за каждый момент, проведенный рядом с тобой.
-            </p>
-          </div>
-          <div class="w-full md:w-1/2">
-            <img 
-              src="@/assets/block2.jpg"
-              alt="Наши воспоминания" 
-              class="w-full h-[300px] sm:h-[400px] object-cover rounded-lg shadow-lg"
-            />
-          </div>
-        </div>
-
-        <!-- Second Block - Image Left, Text Right -->
-        <div class="flex flex-col-reverse md:flex-row items-center gap-4 sm:gap-8">
-          <div class="w-full md:w-1/2">
-            <img 
-              src="@/assets/block1.jpg"
-              alt="Наше будущее" 
-              class="w-full h-[300px] sm:h-[400px] object-cover rounded-lg shadow-lg"
-            />
-          </div>
-          <div class="w-full md:w-1/2 p-4 sm:p-6">
-            <h3 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">Наше будущее</h3>
-            <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
-              В будущем я хочу вместе с тобой путешествовать по разным городам и странам, пробовать новую еду в разных ресторанах, смотреть новые сериалы и аниме, которые ты так любишь. Мечтаю о нашей уютной квартире, где мы будем жить вместе с маленьким котенком, как в тех милых видео из TikTok про пары, которые съехались.
-            </p>
-            <p class="text-sm sm:text-base text-gray-600">
-              Хочу просыпаться рядом с тобой каждое утро, готовить вместе завтрак, планировать наши выходные и создавать новые воспоминания. Мечтаю о том, как мы будем вместе расти, развиваться и становиться лучше, поддерживая друг друга во всех начинаниях. Ты - мое настоящее и будущее, и я хочу прожить с тобой всю жизнь, наполненную любовью, радостью и счастьем.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Memories Section -->
-      <div class="content-section">
-        <h2 class="section-title text-2xl sm:text-3xl">Особенные воспоминания</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div
-            v-for="(memory, index) in memories"
-            :key="index"
-            class="bg-gray-50 rounded-lg overflow-hidden shadow-sm transition-transform hover:scale-105 duration-300"
-          >
-            <img :src="memory.image" class="cursor-pointer w-full h-40 sm:h-48 object-cover" @click="openLightbox(memory.image)"/>
-            <div class="p-4 sm:p-6">
-              <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">{{ memory.title }}</h3>
-              <p class="text-sm sm:text-base text-gray-600">{{ memory.description }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      
 
       <!-- FAQ Section -->
+      <!-- Сердечко сверху -->
+      <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 12px;">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"
+          style="cursor: pointer;" @click="celebrate">
+          <path d="M24 43s-1.45-1.32-3.2-2.91C12.2 33.13 4 26.36 4 18.5 4 12.15 9.15 7 15.5 7c3.54 0 6.73 1.73 8.5 4.44C25.77 8.73 28.96 7 32.5 7 38.85 7 44 12.15 44 18.5c0 7.86-8.2 14.63-16.8 21.59C25.45 41.68 24 43 24 43z" fill="#f472b6"/>
+        </svg>
+        <span style="color: #f472b6; font-weight: bold; font-size: 1.1rem; margin-top: 2px;"></span>
+      </div>
       <div class="py-8 sm:py-16">
         <div class="w-full mx-auto space-y-3 sm:space-y-4">
           <div 
@@ -491,22 +472,16 @@ onMounted(() => {
           </div>
         </div>
       </div>
-
-      <!-- Final Section -->
-      <div class="flex flex-col items-center justify-center py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
-        <p class="text-base sm:text-lg md:text-xl font-medium text-center text-gray-800 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
-          Я хочу провести с ней всё будущее, которое нам предначертано, все поездки отдыхать, все скуф-выходные, все серии 'мама в 16', все среды в KFC.
-          Каждый день рядом с ней - это дар, и я бесконечно благодарен судьбе
-          за эти отношения, наполненные смехом, теплом и взаимопониманием.
-        </p>
-        <div class="w-full max-w-sm sm:max-w-md">
-          <img
-            src="@/assets/flower.jpg"
-            alt="Цветок нашей любви"
-            class="rounded-lg shadow-md w-full h-auto object-cover"
-          >
-        </div>
+      <!-- Сердечко снизу -->
+      <div style="display: flex; flex-direction: column; align-items: center; margin-top: 12px;">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"
+          style="cursor: pointer;" @click="celebrate">
+          <path d="M24 43s-1.45-1.32-3.2-2.91C12.2 33.13 4 26.36 4 18.5 4 12.15 9.15 7 15.5 7c3.54 0 6.73 1.73 8.5 4.44C25.77 8.73 28.96 7 32.5 7 38.85 7 44 12.15 44 18.5c0 7.86-8.2 14.63-16.8 21.59C25.45 41.68 24 43 24 43z" fill="#f472b6"/>
+        </svg>
+        <span style="color: #f472b6; font-weight: bold; font-size: 1.1rem; margin-top: 2px;"></span>
       </div>
+
+      <!-- Самый последний блок с текстом и фото удалён -->
     </div>
 
     <!-- Lightbox -->
@@ -527,12 +502,80 @@ onMounted(() => {
         ×
       </button>
     </div>
+
+    <!-- Письмо в будущее -->
+    <div class="flex flex-col items-center justify-center py-8">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-2">Письмо в будущее</h2>
+      <button
+        @click="showFutureLetter = true"
+        class="mt-2 px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow transition-all duration-200"
+      >
+        Открой в свой следующий день рождения
+      </button>
+
+      <transition name="fade-scale">
+        <div
+          v-if="showFutureLetter"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+          @click.self="showFutureLetter = false"
+        >
+          <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full text-center relative animate-fade-in">
+            <button
+              class="absolute top-2 right-2 text-gray-400 hover:text-pink-500 text-2xl font-bold focus:outline-none"
+              @click="showFutureLetter = false"
+            >&times;</button>
+            <h3 class="text-lg sm:text-xl font-semibold mb-4 text-pink-600">Письмо в будущее</h3>
+            <p class="text-base sm:text-lg text-gray-700 leading-relaxed">
+              Я не знаю, где мы будем через год, но знаю точно: ты будешь ещё сильнее, ещё красивее и всё так же сводить меня с ума…
+            </p>
+          </div>
+        </div>
+      </transition>
+    </div>
+    <div class="flex flex-col items-center justify-center py-8">
+  <!-- Кликабельная коробка с бантом -->
+  <div class="relative cursor-pointer group" @click="showGiftBox = true">
+     <img :src="Gift" class="gift-box-image w-full object-cover gift" />
+  </div>
+
+  <!-- Анимация раскрытия и содержимое -->
+  <transition 
+    name="gift-box"
+    enter-active-class="animate__animated animate__zoomIn"
+    leave-active-class="animate__animated animate__zoomOut"
+  >
+    <div 
+      v-if="showGiftBox"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      @click.self="showGiftBox = false"
+    >
+      <div class="gift-box-modal bg-white rounded-xl shadow-2xl overflow-hidden relative">
+        <button
+          class="absolute top-2 right-2 text-gray-400 hover:text-pink-500 text-2xl font-bold focus:outline-none z-10"
+          @click="showGiftBox = false"
+        >&times;</button>
+        
+        <!-- Фотка -->
+        <img :src="Podarok" class="gift-box-image w-full object-cover" />
+        
+        <!-- Песня -->
+        <div class="p-4 sm:p-6">
+          <p class="text-lg font-semibold text-pink-600 mb-2">Наша песня</p>
+          <audio autoplay controls class="w-full">
+            <source :src="yraAudio" type="audio/mpeg">
+          </audio>
+          <p class="mt-4 text-gray-700 text-center">Я не подарок, но вот твой подарок!</p>
+        </div>
+      </div>
+    </div>
+  </transition>
+</div>
   </div>
 </template>
 
 <style scoped>
 .bg-banner {
-  background: url('@/assets/first-block.jpg') no-repeat center center fixed;
+  background: url('@/assets/first-block.jpg') no-repeat center center fixed,rgb(223, 140, 167);
 }
 
 .swiper {
@@ -559,6 +602,8 @@ onMounted(() => {
 }
 
 .feature-circle {
+  z-index: 1;
+  position: relative;
   @apply w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white shadow flex items-center justify-center mb-3 sm:mb-4;
 }
 
@@ -598,25 +643,6 @@ onMounted(() => {
 /* Smooth shadow transition on hover */
 .hover\:shadow-md:hover {
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
-
-/* Mobile-first media queries */
-@media (max-width: 640px) {
-  .content-section {
-    @apply p-4;
-  }
-  
-  .section-title {
-    @apply text-2xl mb-6;
-  }
-  
-  .feature-circle {
-    @apply w-10 h-10 mb-3;
-  }
-  
-  .feature-icon {
-    @apply w-5 h-5;
-  }
 }
 
 .hearts-container {
@@ -660,5 +686,150 @@ onMounted(() => {
   position: relative;
   z-index: 2;
   background: white;
+}
+.fade-scale-enter-active, .fade-scale-leave-active {
+  transition: all 0.3s cubic-bezier(.4,2,.6,1);
+}
+.fade-scale-enter-from, .fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+.fade-scale-enter-to, .fade-scale-leave-from {
+  opacity: 1;
+  transform: scale(1);
+}
+.mini-photo-popup {
+  z-index: 9999;
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  padding: 10px 10px 18px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 220px;
+  min-height: 120px;
+  padding-bottom: 0;
+}
+.mini-photo-img {
+  width: 350px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+.mini-photo-close {
+  position: absolute;
+  top: 10px;
+  right: auto;
+  left: 18px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #f472b6;
+  cursor: pointer;
+}
+@media (min-width: 640px) {
+  .mini-photo-img {
+    width: 420px;
+    height: 250px;
+  }
+  .mini-photo-popup {
+    min-width: 350px;
+    min-height: 180px;
+  }
+}
+@media (min-width: 1024px) {
+  .mini-photo-img {
+    z-index:150;
+    width: 350px;
+    height: 300px;
+  }
+  .mini-photo-popup {
+    z-index:150;
+    min-width: 370px;
+    min-height: 220px;
+  }
+}
+.reason-text {
+  margin-top: 18px;
+  z-index: 1;
+  position: relative;
+  word-break: break-word;
+  max-width: 95%;
+  white-space: pre-line;
+}
+.hero-block {
+  min-height: 400px;
+}
+@media (min-width: 640px) {
+  .hero-block {
+    min-height: 550px;
+  }
+}
+@media (max-width: 639px) {
+  .reason-card {
+    max-width: 90vw;
+    margin: 8px auto;
+  }
+  .feature-circle {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+  .feature-circle .heart-button {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  .hero-block {
+    min-height: 0;
+    height: auto !important;
+    padding-bottom: 24px;
+  }
+  .hero-text {
+    font-size: 15px;
+    padding: 0 2px;
+    max-width: 100%;
+    line-height: 1.3;
+  }
+}
+.gift-box-modal {
+  width: 90vw;
+  max-width: 400px;
+  margin: 0 16px;
+}
+
+.gift-box-image {
+  width: 100%;
+  height: auto;
+  max-height: 50vh;
+  object-fit: contain;
+}
+
+@media (max-width: 640px) {
+  .gift-box-modal {
+    width: 95vw;
+    padding: 16px;
+  }
+  
+  .gift-box-content {
+    padding: 16px;
+  }
+  
+  .gift-box-image {
+    max-height: 40vh;
+  }
+}
+.gift{
+  transition: all 0.3s ease-in-out;
+  &:hover{
+    transform: scale(1.1)
+  }
 }
 </style> 

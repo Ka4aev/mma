@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "canvas-confetti": "^1.9.3",
+    "particles.vue3": "^2.12.0",
     "vue": "^3.4.15"
   },
   "devDependencies": {
