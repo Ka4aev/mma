@@ -3,12 +3,13 @@ import gsap from 'gsap'
 import yraAudio from '@/assets/audio/yra.mp3'
 
 export const useCelebrate = () => {
-  const celebrate = () => {
-    const audio = new Audio(yraAudio)
-    audio.volume = 0.5
-    audio.play().catch((error) => console.log('Audio playback failed:', error))
+  const celebrate = ({ playAudio = true, duration = 8000 } = {}) => {
+    if (playAudio) {
+      const audio = new Audio(yraAudio)
+      audio.volume = 0.5
+      audio.play().catch((error) => console.log('Audio playback failed:', error))
+    }
 
-    const duration = 8000
     const animationEnd = Date.now() + duration
     const defaults = {
       startVelocity: 32,

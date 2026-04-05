@@ -1,15 +1,18 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import gsap from 'gsap'
+import unlockVoiceMessage from '@/assets/audio/mmm.mp3'
 import Our3 from '@/assets/page2/happy-birthday.jpg'
 import Our4 from '@/assets/page2/birthday.jpg'
 import Our5 from '@/assets/page2/lepka.jpg'
 import Our6 from '@/assets/page2/pizza.jpg'
 import Our7 from '@/assets/page2/wedding.jpg'
 import Our8 from '@/assets/page2/our-gpt.png'
+import { useCelebrate } from '@/composables/useCelebrate'
 import { useRelationshipTimers } from '@/composables/useRelationshipTimers'
 
 const { daysTogetherLabel, daysRemainingLabel, padNumber, targetDate, timeToTarget } = useRelationshipTimers()
+const { celebrate } = useCelebrate()
 const unlockModalStorageKey = 'page-two-unlock-modal-shown'
 
 const storyCards = [
@@ -58,29 +61,29 @@ const floatingPhraseTexts = [
   'вместе навсегда',
   'люблю тебя',
   'моя малышка',
-  'наш уют',
-  'мое спокойствие',
+  'бубубу',
+  'бесячка',
   'ты мой дом',
   'наша история',
   'с тобой легко',
   'ты мой свет',
   'мои любимые глаза',
-  'always us',
-  'sweet chaos',
-  'love mode',
-  'my safe place',
-  'kiss me more',
-  'our little world',
+  'китя',
+  '-Нуну',
+  '-"Ебааааать"',
+  'душнилки',
+  'жопищеее',
+  'съехаться с тобой',
   'ты и я',
   'самая родная',
   'нежность',
-  'любимые моменты',
-  'мы это мы',
+  'молодец',
+  'умничка',
   'обнять тебя',
-  'keep this moment',
-  'our story',
+  'го няшиться',
+  'кьюти',
   'мой вайб',
-  'до 1300 дней',
+  'два пушистика',
   'ты космос',
   'влюбляться снова',
   'смотреть на тебя',
@@ -89,21 +92,21 @@ const floatingPhraseTexts = [
   'ты чудо',
   'улыбайся чаще',
   'маленькое счастье',
-  'holding on',
-  'moonlight us',
+  'валяться с тобой',
+  'кифас',
   'вечер вдвоем',
-  'с тобой смешно',
-  'сердце спокойно',
-  'люблю сильнее',
-  'мы близко',
-  'только ты',
-  'наша глава',
+  'с тобой комфортно',
+  'злюка',
+  'барсики',
+  'малышка босс',
+  'кринжуля моя',
+  'любимка',
   'дальше вместе',
-  'любимый голос',
-  'пока ты рядом',
-  'sweetheart',
+  'жопка',
+  'вдруг бывает только',
+  'so cute',
   'все про нас',
-  'ты красивая',
+  'врушка',
 ]
 
 const floatingColors = [
@@ -157,6 +160,16 @@ const floatingPhrases = floatingPhraseTexts.map((text, index) => {
 })
 
 const isVideoModalOpen = ref(false)
+const unlockAudioRef = ref(null)
+const unlockAudioCurrentTime = ref(0)
+const unlockAudioDuration = ref(0)
+const isUnlockAudioPlaying = ref(false)
+const hasUnlockAudioCelebrated = ref(false)
+const unlockAudioProgress = computed(() => (
+  unlockAudioDuration.value > 0
+    ? (unlockAudioCurrentTime.value / unlockAudioDuration.value) * 100
+    : 0
+))
 
 const syncBodyOverflow = () => {
   document.body.style.overflow = isVideoModalOpen.value || isUnlockModalOpen.value ? 'hidden' : 'auto'
@@ -205,6 +218,11 @@ const openUnlockModal = () => {
 }
 
 const closeUnlockModal = () => {
+  if (unlockAudioRef.value) {
+    unlockAudioRef.value.pause()
+    unlockAudioRef.value.currentTime = 0
+  }
+
   isUnlockModalOpen.value = false
   syncBodyOverflow()
 }
@@ -231,6 +249,65 @@ const handleKeydown = (event) => {
   }
 }
 
+const formatAudioTime = (value) => {
+  const totalSeconds = Math.max(0, Math.floor(value))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+}
+
+const syncUnlockAudioState = () => {
+  if (!unlockAudioRef.value) {
+    return
+  }
+
+  unlockAudioCurrentTime.value = unlockAudioRef.value.currentTime
+  unlockAudioDuration.value = Number.isFinite(unlockAudioRef.value.duration) ? unlockAudioRef.value.duration : 0
+  isUnlockAudioPlaying.value = !unlockAudioRef.value.paused
+}
+
+const toggleUnlockAudio = async () => {
+  if (!unlockAudioRef.value) {
+    return
+  }
+
+  if (unlockAudioRef.value.paused) {
+    try {
+      await unlockAudioRef.value.play()
+      isUnlockAudioPlaying.value = true
+    } catch {
+      isUnlockAudioPlaying.value = false
+    }
+
+    return
+  }
+
+  unlockAudioRef.value.pause()
+  isUnlockAudioPlaying.value = false
+}
+
+const seekUnlockAudio = (event) => {
+  if (!unlockAudioRef.value) {
+    return
+  }
+
+  const nextTime = Number(event.target.value)
+  unlockAudioRef.value.currentTime = nextTime
+  unlockAudioCurrentTime.value = nextTime
+}
+
+const handleUnlockAudioEnded = () => {
+  syncUnlockAudioState()
+
+  if (hasUnlockAudioCelebrated.value) {
+    return
+  }
+
+  hasUnlockAudioCelebrated.value = true
+  celebrate({ playAudio: false, duration: 5000 })
+}
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
 
@@ -248,6 +325,32 @@ onMounted(() => {
 watch(isPageUnlocked, (isUnlocked, wasUnlocked) => {
   if (isUnlocked && !wasUnlocked) {
     openUnlockModal()
+  }
+})
+
+watch(isUnlockModalOpen, async (isOpen) => {
+  if (!isOpen) {
+    isUnlockAudioPlaying.value = false
+    unlockAudioCurrentTime.value = 0
+    hasUnlockAudioCelebrated.value = false
+    return
+  }
+
+  await nextTick()
+
+  if (!unlockAudioRef.value) {
+    return
+  }
+
+  unlockAudioRef.value.currentTime = 0
+  hasUnlockAudioCelebrated.value = false
+  syncUnlockAudioState()
+
+  try {
+    await unlockAudioRef.value.play()
+    isUnlockAudioPlaying.value = true
+  } catch {
+    isUnlockAudioPlaying.value = false
   }
 })
 
@@ -619,12 +722,13 @@ onUnmounted(() => {
       @click="closeUnlockModal"
     >
       <div
-        class="relative w-full max-w-2xl overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(145deg,_rgba(15,23,42,0.98),_rgba(88,28,135,0.94)_58%,_rgba(244,63,94,0.88)_100%)] p-6 text-white shadow-[0_40px_120px_rgba(0,0,0,0.5)] sm:p-8"
+        class="relative w-full max-w-2xl overflow-hidden rounded-[32px] border border-white/12 bg-[linear-gradient(145deg,_rgba(46,33,88,0.94),_rgba(88,43,135,0.9)_56%,_rgba(197,83,126,0.82)_100%)] p-6 text-white shadow-[0_40px_120px_rgba(0,0,0,0.42)] sm:p-8"
         @click.stop
       >
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(255,255,255,0.05),_transparent_36%)]"></div>
         <button
           type="button"
-          class="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/12 text-white backdrop-blur transition hover:bg-white/20"
+          class="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/55"
           @click="closeUnlockModal"
         >
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -632,22 +736,115 @@ onUnmounted(() => {
           </svg>
         </button>
 
-        <span class="inline-flex rounded-full border border-white/12 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/75">
+        <span class="relative inline-flex rounded-full border border-white/35 bg-white/[0.07] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/85">
           1300 дней
         </span>
-        <h2 class="mt-5 text-3xl font-black tracking-tight sm:text-4xl">Эта глава открылась.</h2>
-        <p class="mt-4 leading-8 text-white/85">
+        <h2 class="relative mt-5 text-3xl font-black tracking-tight text-white sm:text-4xl">Эта глава открылась.</h2>
+        <p class="relative mt-4 leading-8 text-white/88">
           Надеюсь тебе понравится, я чуть постарался, чтобы сделать эту дату немного особеннее.
         </p>
-        <p class="mt-4 leading-8 text-white/70">
+        <p class="relative mt-4 leading-8 text-white/72">
           Пока оставлю это как маленькую отметку, что мы дошли до ещё одной важной точки нашей истории.
         </p>
+
+        <div class="relative mt-8 rounded-[28px] border border-white/60 bg-[linear-gradient(180deg,_rgba(255,255,255,0.04),_rgba(255,255,255,0.02))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.16)] backdrop-blur sm:p-5">
+          <p class="mb-4 text-sm font-medium tracking-[0.08em] text-white/86">
+            не закрывай пока не дослушаешь
+          </p>
+
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="text-[11px] uppercase tracking-[0.24em] text-white/55">voice message</p>
+            </div>
+
+            <button
+              type="button"
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/55 text-white transition hover:scale-105 hover:bg-black/70"
+              @click="toggleUnlockAudio"
+            >
+              <svg v-if="!isUnlockAudioPlaying" class="h-5 w-5 translate-x-[1px]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5.14v13.72a1 1 0 001.5.86l10.5-6.86a1 1 0 000-1.72L9.5 4.28A1 1 0 008 5.14z" />
+              </svg>
+              <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 5a1 1 0 011 1v12a1 1 0 11-2 0V6a1 1 0 011-1zm10 0a1 1 0 011 1v12a1 1 0 11-2 0V6a1 1 0 011-1z" />
+              </svg>
+            </button>
+          </div>
+
+          <audio
+            ref="unlockAudioRef"
+            :src="unlockVoiceMessage"
+            preload="auto"
+            autoplay
+            @timeupdate="syncUnlockAudioState"
+            @loadedmetadata="syncUnlockAudioState"
+            @play="isUnlockAudioPlaying = true"
+            @pause="isUnlockAudioPlaying = false"
+            @ended="handleUnlockAudioEnded"
+          ></audio>
+
+          <div class="mt-5">
+            <input
+              class="unlock-audio-slider"
+              type="range"
+              min="0"
+              :max="unlockAudioDuration || 0"
+              step="0.1"
+              :value="unlockAudioCurrentTime"
+              :style="{
+                background: `linear-gradient(90deg, rgba(251, 191, 36, 0.98) 0%, rgba(244, 63, 94, 0.96) ${unlockAudioProgress}%, rgba(255, 255, 255, 0.16) ${unlockAudioProgress}%, rgba(255, 255, 255, 0.16) 100%)`,
+              }"
+              @input="seekUnlockAudio"
+            />
+            <div class="mt-2 flex items-center justify-between text-xs font-medium tracking-[0.12em] text-white/55">
+              <span>{{ formatAudioTime(unlockAudioCurrentTime) }}</span>
+              <span>{{ formatAudioTime(unlockAudioDuration) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
+.unlock-audio-slider {
+  width: 100%;
+  appearance: none;
+  height: 10px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.95) 0%, rgba(244, 63, 94, 0.95) 100%);
+  outline: none;
+  box-shadow: inset 0 1px 8px rgba(15, 23, 42, 0.28);
+}
+
+.unlock-audio-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: #fff7ed;
+  box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35);
+  cursor: pointer;
+}
+
+.unlock-audio-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: #fff7ed;
+  box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35);
+  cursor: pointer;
+}
+
+.unlock-audio-slider::-moz-range-track {
+  height: 10px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.95) 0%, rgba(244, 63, 94, 0.95) 100%);
+}
+
 .floating-phrases-layer {
   position: fixed;
   inset: 0;
