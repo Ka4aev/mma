@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Redirecting...</title>
+    <script>
+      (function () {
+        const { pathname, search, hash } = window.location
+        const base = '/mma'
+        const redirect = pathname.startsWith(base) ? pathname.slice(base.length) || '/' : pathname || '/'
+
+        sessionStorage.redirect = `${base}${redirect}${search}${hash}`
+        window.location.replace(`${base}/`)
+      })()
+    </script>
+  </head>
+  <body></body>
+</html>
