@@ -16,7 +16,7 @@ const handleAuthentication = () => {
 
 <template>
   <div class="min-h-screen bg-gray-50">
-    <div class="container mx-auto px-4">
+    <div class="mx-auto max-w-7xl px-4">
       <Transition
         enter-active-class="transition duration-500 ease-out"
         enter-from-class="transform scale-95 opacity-0"
@@ -41,18 +41,3 @@ const handleAuthentication = () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
