@@ -5,6 +5,7 @@ import MainContent from './components/MainContent.vue'
 
 const isAuthenticated = ref(false)
 const showContent = ref(false)
+const sitePasswordHash = 'efe8564971192c24d29c7aedb7c5230aeaf13dbac7815bb7bd2206bdcc483350'
 
 const handleAuthentication = () => {
   isAuthenticated.value = true
@@ -27,6 +28,7 @@ const handleAuthentication = () => {
       >
         <PasswordScreen
           v-if="!isAuthenticated"
+          :password-hash="sitePasswordHash"
           @authenticated="handleAuthentication"
         />
       </Transition>

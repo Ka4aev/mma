@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import gsap from 'gsap'
-import unlockVoiceMessage from '@/assets/audio/mmm.mp3'
+import PasswordScreen from '@/components/PasswordScreen.vue'
 import Our3 from '@/assets/page2/happy-birthday.jpg'
 import Our4 from '@/assets/page2/birthday.jpg'
 import Our5 from '@/assets/page2/lepka.jpg'
@@ -9,11 +9,13 @@ import Our6 from '@/assets/page2/pizza.jpg'
 import Our7 from '@/assets/page2/wedding.jpg'
 import Our8 from '@/assets/page2/our-gpt.png'
 import { useCelebrate } from '@/composables/useCelebrate'
-import { useRelationshipTimers } from '@/composables/useRelationshipTimers'
+import { useRelationshipMilestone, useRelationshipTimers } from '@/composables/useRelationshipTimers'
 
-const { daysTogetherLabel, daysRemainingLabel, padNumber, targetDate, timeToTarget } = useRelationshipTimers()
+const { daysTogetherLabel, daysRemainingLabel, formatTimeUnitLabel, padNumber, targetDate, timeToTarget } = useRelationshipTimers()
+const { timeSinceTarget: timeSince1300 } = useRelationshipMilestone(1300)
 const { celebrate } = useCelebrate()
 const unlockModalStorageKey = 'page-two-unlock-modal-shown'
+const specialVideoPasswordHash = '661678a7bd4010dd19a04016283fb24d6dafce714a7499c15656e58a49fd9b1a'
 
 const storyCards = [
   {
@@ -94,7 +96,7 @@ const floatingPhraseTexts = [
   'маленькое счастье',
   'валяться с тобой',
   'кифас',
-  'вечер вдвоем',
+  'балбеска',
   'с тобой комфортно',
   'злюка',
   'барсики',
@@ -160,6 +162,8 @@ const floatingPhrases = floatingPhraseTexts.map((text, index) => {
 })
 
 const isVideoModalOpen = ref(false)
+const isSpecialVideoPasswordOpen = ref(false)
+const isSpecialVideoUnlocked = ref(false)
 const unlockAudioRef = ref(null)
 const unlockAudioCurrentTime = ref(0)
 const unlockAudioDuration = ref(0)
@@ -172,10 +176,32 @@ const unlockAudioProgress = computed(() => (
 ))
 
 const syncBodyOverflow = () => {
-  document.body.style.overflow = isVideoModalOpen.value || isUnlockModalOpen.value ? 'hidden' : 'auto'
+  document.body.style.overflow = (
+    isVideoModalOpen.value
+    || isUnlockModalOpen.value
+    || isSpecialVideoPasswordOpen.value
+  ) ? 'hidden' : 'auto'
 }
 
 const openVideoModal = () => {
+  if (!isSpecialVideoUnlocked.value) {
+    isSpecialVideoPasswordOpen.value = true
+    syncBodyOverflow()
+    return
+  }
+
+  isVideoModalOpen.value = true
+  syncBodyOverflow()
+}
+
+const closeSpecialVideoPassword = () => {
+  isSpecialVideoPasswordOpen.value = false
+  syncBodyOverflow()
+}
+
+const handleSpecialVideoAuthenticated = () => {
+  isSpecialVideoUnlocked.value = true
+  isSpecialVideoPasswordOpen.value = false
   isVideoModalOpen.value = true
   syncBodyOverflow()
 }
@@ -241,6 +267,11 @@ const forceUnlockForTest = () => {
 const handleKeydown = (event) => {
   if (event.key === 'Escape' && isUnlockModalOpen.value) {
     closeUnlockModal()
+    return
+  }
+
+  if (event.key === 'Escape' && isSpecialVideoPasswordOpen.value) {
+    closeSpecialVideoPassword()
     return
   }
 
@@ -400,17 +431,17 @@ onUnmounted(() => {
 
           <div class="mt-8 grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
             <div
-              v-for="(value, label) in {
-                дней: displayTimeToTarget.days,
-                часов: padNumber(displayTimeToTarget.hours),
-                минут: padNumber(displayTimeToTarget.minutes),
-                секунд: padNumber(displayTimeToTarget.seconds),
-              }"
-              :key="label"
+              v-for="item in [
+                { value: displayTimeToTarget.days, label: formatTimeUnitLabel('days', displayTimeToTarget.days) },
+                { value: padNumber(displayTimeToTarget.hours), label: formatTimeUnitLabel('hours', displayTimeToTarget.hours) },
+                { value: padNumber(displayTimeToTarget.minutes), label: formatTimeUnitLabel('minutes', displayTimeToTarget.minutes) },
+                { value: padNumber(displayTimeToTarget.seconds), label: formatTimeUnitLabel('seconds', displayTimeToTarget.seconds) },
+              ]"
+              :key="item.label"
               class="rounded-[28px] border border-white/10 bg-white/[0.05] px-4 py-6 shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur"
             >
-              <div class="text-4xl font-black tabular-nums text-amber-200 sm:text-5xl">{{ value }}</div>
-              <div class="mt-2 text-sm uppercase tracking-[0.16em] text-slate-300">{{ label }}</div>
+              <div class="text-4xl font-black tabular-nums text-amber-200 sm:text-5xl">{{ item.value }}</div>
+              <div class="mt-2 text-sm uppercase tracking-[0.16em] text-slate-300">{{ item.label }}</div>
             </div>
           </div>
 
@@ -471,7 +502,7 @@ onUnmounted(() => {
             </span>
             <p class="mt-4 text-2xl font-semibold leading-tight text-white">{{ daysRemainingLabel }}</p>
             <p class="mt-3 text-sm uppercase tracking-[0.18em] text-amber-200/80">
-              1300 дней будет {{ targetDate.toLocaleDateString('ru-RU') }}
+               в эту дату: {{ targetDate.toLocaleDateString('ru-RU') }}
             </p>
           </div>
         </div>
@@ -487,27 +518,27 @@ onUnmounted(() => {
               <span class="inline-flex rounded-full bg-rose-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-rose-200">
                 счетчик дней
               </span>
-              <h2 class="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">До 1300 дней осталось</h2>
+              <h2 class="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">С 1300 дней прошло</h2>
             </div>
             <div class="hidden rounded-2xl bg-white/5 px-4 py-3 text-right text-sm text-slate-300 sm:block">
-              уже вместе
-              <div class="text-2xl font-bold text-white">{{ daysTogetherLabel }}</div>
+              дата старта
+              <div class="text-2xl font-bold text-white">06.04.2026</div>
             </div>
           </div>
 
           <div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div
-              v-for="(value, label) in {
-                дней: timeToTarget.days,
-                часов: padNumber(timeToTarget.hours),
-                минут: padNumber(timeToTarget.minutes),
-                секунд: padNumber(timeToTarget.seconds),
-              }"
-              :key="label"
+              v-for="item in [
+                { value: timeSince1300.days, label: formatTimeUnitLabel('days', timeSince1300.days) },
+                { value: padNumber(timeSince1300.hours), label: formatTimeUnitLabel('hours', timeSince1300.hours) },
+                { value: padNumber(timeSince1300.minutes), label: formatTimeUnitLabel('minutes', timeSince1300.minutes) },
+                { value: padNumber(timeSince1300.seconds), label: formatTimeUnitLabel('seconds', timeSince1300.seconds) },
+              ]"
+              :key="item.label"
               class="rounded-[28px] border border-white/10 bg-white/[0.04] px-4 py-6 text-center"
             >
-              <div class="text-4xl font-black tabular-nums text-amber-200 sm:text-5xl">{{ value }}</div>
-              <div class="mt-2 text-sm uppercase tracking-[0.16em] text-slate-400">{{ label }}</div>
+              <div class="text-4xl font-black tabular-nums text-amber-200 sm:text-5xl">{{ item.value }}</div>
+              <div class="mt-2 text-sm uppercase tracking-[0.16em] text-slate-400">{{ item.label }}</div>
             </div>
           </div>
         </div>
@@ -553,7 +584,7 @@ onUnmounted(() => {
             наша небольшая история
           </span>
           <h2 class="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-900 sm:text-4xl">
-            Мое любимое видео
+            Особенный день
           </h2>
           <p class="mt-4 text-base leading-8 text-slate-600">
             Напоминает много счастливых и теплых моментов,
@@ -591,8 +622,8 @@ onUnmounted(() => {
                     <path d="M8 5.14v13.72a1 1 0 001.5.86l10.5-6.86a1 1 0 000-1.72L9.5 4.28A1 1 0 008 5.14z" />
                   </svg>
                 </div>
-                <p class="text-xl font-bold">Открыть видео в большом окне</p>
-                <p class="mt-1 text-sm text-white/75">Нажми и смотри почти на весь экран сайта</p>
+                <p class="text-xl font-bold">Открыть видео "Особенный день"</p>
+                <p class="mt-1 text-sm text-white/75">Нажми, введи пароль и смотри почти на весь экран сайта</p>
               </div>
             </button>
           </div>
@@ -689,6 +720,39 @@ onUnmounted(() => {
     </div>
 
     <div
+      v-if="isSpecialVideoPasswordOpen"
+      class="fixed inset-0 z-[72] flex items-center justify-center bg-slate-950/88 p-4 backdrop-blur-sm sm:p-8"
+      @click="closeSpecialVideoPassword"
+    >
+      <div
+        class="relative w-full max-w-xl overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,_rgba(15,23,42,0.98),_rgba(30,41,59,0.94)_46%,_rgba(76,29,149,0.9)_100%)] shadow-[0_40px_120px_rgba(0,0,0,0.55)]"
+        @click.stop
+      >
+        <button
+          type="button"
+          class="absolute right-8 top-8 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/12 text-white backdrop-blur transition hover:bg-white/20"
+          @click="closeSpecialVideoPassword"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <PasswordScreen
+          :password-hash="specialVideoPasswordHash"
+          :length="8"
+          title="Пароль для видео"
+          hint="Подсказка: не будет"
+          panel-class="min-h-[420px] bg-transparent text-white shadow-none"
+          input-class="password-input border-white/25 bg-white/10 text-white placeholder:text-white/35"
+          error-class="text-rose-300"
+          hint-class="text-slate-300"
+          @authenticated="handleSpecialVideoAuthenticated"
+        />
+      </div>
+    </div>
+
+    <div
       v-if="isVideoModalOpen"
       class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm sm:p-8"
       @click="closeVideoModal"
@@ -716,135 +780,10 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div
-      v-if="isUnlockModalOpen"
-      class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/88 p-4 backdrop-blur-md sm:p-8"
-      @click="closeUnlockModal"
-    >
-      <div
-        class="relative w-full max-w-2xl overflow-hidden rounded-[32px] border border-white/12 bg-[linear-gradient(145deg,_rgba(46,33,88,0.94),_rgba(88,43,135,0.9)_56%,_rgba(197,83,126,0.82)_100%)] p-6 text-white shadow-[0_40px_120px_rgba(0,0,0,0.42)] sm:p-8"
-        @click.stop
-      >
-        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(255,255,255,0.05),_transparent_36%)]"></div>
-        <button
-          type="button"
-          class="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/55"
-          @click="closeUnlockModal"
-        >
-          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
-        <span class="relative inline-flex rounded-full border border-white/35 bg-white/[0.07] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/85">
-          1300 дней
-        </span>
-        <h2 class="relative mt-5 text-3xl font-black tracking-tight text-white sm:text-4xl">Эта глава открылась.</h2>
-        <p class="relative mt-4 leading-8 text-white/88">
-          Надеюсь тебе понравится, я чуть постарался, чтобы сделать эту дату немного особеннее.
-        </p>
-        <p class="relative mt-4 leading-8 text-white/72">
-          Пока оставлю это как маленькую отметку, что мы дошли до ещё одной важной точки нашей истории.
-        </p>
-
-        <div class="relative mt-8 rounded-[28px] border border-white/60 bg-[linear-gradient(180deg,_rgba(255,255,255,0.04),_rgba(255,255,255,0.02))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.16)] backdrop-blur sm:p-5">
-          <p class="mb-4 text-sm font-medium tracking-[0.08em] text-white/86">
-            не закрывай пока не дослушаешь
-          </p>
-
-          <div class="flex items-center justify-between gap-4">
-            <div>
-              <p class="text-[11px] uppercase tracking-[0.24em] text-white/55">voice message</p>
-            </div>
-
-            <button
-              type="button"
-              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/55 text-white transition hover:scale-105 hover:bg-black/70"
-              @click="toggleUnlockAudio"
-            >
-              <svg v-if="!isUnlockAudioPlaying" class="h-5 w-5 translate-x-[1px]" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5.14v13.72a1 1 0 001.5.86l10.5-6.86a1 1 0 000-1.72L9.5 4.28A1 1 0 008 5.14z" />
-              </svg>
-              <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 5a1 1 0 011 1v12a1 1 0 11-2 0V6a1 1 0 011-1zm10 0a1 1 0 011 1v12a1 1 0 11-2 0V6a1 1 0 011-1z" />
-              </svg>
-            </button>
-          </div>
-
-          <audio
-            ref="unlockAudioRef"
-            :src="unlockVoiceMessage"
-            preload="auto"
-            autoplay
-            @timeupdate="syncUnlockAudioState"
-            @loadedmetadata="syncUnlockAudioState"
-            @play="isUnlockAudioPlaying = true"
-            @pause="isUnlockAudioPlaying = false"
-            @ended="handleUnlockAudioEnded"
-          ></audio>
-
-          <div class="mt-5">
-            <input
-              class="unlock-audio-slider"
-              type="range"
-              min="0"
-              :max="unlockAudioDuration || 0"
-              step="0.1"
-              :value="unlockAudioCurrentTime"
-              :style="{
-                background: `linear-gradient(90deg, rgba(251, 191, 36, 0.98) 0%, rgba(244, 63, 94, 0.96) ${unlockAudioProgress}%, rgba(255, 255, 255, 0.16) ${unlockAudioProgress}%, rgba(255, 255, 255, 0.16) 100%)`,
-              }"
-              @input="seekUnlockAudio"
-            />
-            <div class="mt-2 flex items-center justify-between text-xs font-medium tracking-[0.12em] text-white/55">
-              <span>{{ formatAudioTime(unlockAudioCurrentTime) }}</span>
-              <span>{{ formatAudioTime(unlockAudioDuration) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </section>
 </template>
 
 <style scoped>
-.unlock-audio-slider {
-  width: 100%;
-  appearance: none;
-  height: 10px;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, rgba(251, 191, 36, 0.95) 0%, rgba(244, 63, 94, 0.95) 100%);
-  outline: none;
-  box-shadow: inset 0 1px 8px rgba(15, 23, 42, 0.28);
-}
-
-.unlock-audio-slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 9999px;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  background: #fff7ed;
-  box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35);
-  cursor: pointer;
-}
-
-.unlock-audio-slider::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
-  border-radius: 9999px;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  background: #fff7ed;
-  box-shadow: 0 6px 18px rgba(244, 63, 94, 0.35);
-  cursor: pointer;
-}
-
-.unlock-audio-slider::-moz-range-track {
-  height: 10px;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, rgba(251, 191, 36, 0.95) 0%, rgba(244, 63, 94, 0.95) 100%);
-}
-
 .floating-phrases-layer {
   position: fixed;
   inset: 0;

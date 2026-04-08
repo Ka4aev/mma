@@ -2,21 +2,72 @@
 import { ref, onMounted } from 'vue'
 import gsap from 'gsap'
 
+const props = defineProps({
+  passwordHash: {
+    type: String,
+    required: true,
+  },
+  length: {
+    type: Number,
+    default: 4,
+  },
+  title: {
+    type: String,
+    default: 'Введите пароль',
+  },
+  hint: {
+    type: String,
+    default: 'Подсказка: Особенная дата',
+  },
+  panelClass: {
+    type: String,
+    default: 'bg-white text-gray-800 shadow-md',
+  },
+  inputClass: {
+    type: String,
+    default: 'password-input',
+  },
+  errorClass: {
+    type: String,
+    default: 'text-red-500',
+  },
+  hintClass: {
+    type: String,
+    default: 'text-gray-500',
+  },
+})
+
 const emit = defineEmits(['authenticated'])
-const password = ['1', '4', '0', '9']
-const inputs = ref(['', '', '', ''])
+const inputs = ref(Array.from({ length: props.length }, () => ''))
 const inputRefs = ref([])
 const errorMessage = ref('')
 const isShaking = ref(false)
 
+const hashPassword = async (value) => {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(value)
+  const buffer = await window.crypto.subtle.digest('SHA-256', data)
+
+  return Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+}
+
 const handleInput = (index, event) => {
   const value = event.target.value
+  errorMessage.value = ''
+
   if (value && !isNaN(value)) {
     inputs.value[index] = value.slice(-1)
-    if (index < 3) {
+    if (index < props.length - 1) {
       inputRefs.value[index + 1].focus()
     }
     checkPassword()
+    return
+  }
+
+  if (!value) {
+    inputs.value[index] = ''
   }
 }
 
@@ -26,9 +77,11 @@ const handleKeydown = (index, event) => {
   }
 }
 
-const checkPassword = () => {
+const checkPassword = async () => {
   if (inputs.value.every(input => input !== '')) {
-    if (inputs.value.join('') === password.join('')) {
+    const enteredPasswordHash = await hashPassword(inputs.value.join(''))
+
+    if (enteredPasswordHash === props.passwordHash) {
       emit('authenticated')
     } else {
       errorMessage.value = 'Неверный пароль'
@@ -38,7 +91,7 @@ const checkPassword = () => {
         duration: 0.5,
         onComplete: () => {
           isShaking.value = false
-          inputs.value = ['', '', '', '']
+          inputs.value = Array.from({ length: props.length }, () => '')
           inputRefs.value[0].focus()
         }
       })
@@ -55,10 +108,10 @@ onMounted(() => {
   <div class="min-h-screen flex items-center justify-center py-12 px-4">
     <div class="max-w-md w-full">
       <div 
-        class="bg-white p-8 rounded-lg shadow-md"
-        :class="{ 'animate-shake': isShaking }"
+        class="rounded-lg p-8"
+        :class="[panelClass, { 'animate-shake': isShaking }]"
       >
-        <h2 class="text-2xl font-bold text-center mb-8 text-gray-800">Введите пароль</h2>
+        <h2 class="mb-8 text-center text-2xl font-bold">{{ title }}</h2>
         <div class="flex justify-center gap-3 mb-6">
           <input
             v-for="(input, index) in inputs"
@@ -70,11 +123,11 @@ onMounted(() => {
             @keydown="handleKeydown(index, $event)"
             ref="inputRefs"
             maxlength="1"
-            class="password-input"
+            :class="inputClass"
           >
         </div>
-        <p v-if="errorMessage" class="text-red-500 text-center mb-4 text-sm">{{ errorMessage }}</p>
-        <p class="text-gray-500 text-center text-sm">Подсказка: Особенная дата 💝</p>
+        <p v-if="errorMessage" class="mb-4 text-center text-sm" :class="errorClass">{{ errorMessage }}</p>
+        <p class="text-center text-sm" :class="hintClass">{{ hint }}</p>
       </div>
     </div>
   </div>

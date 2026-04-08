@@ -24,7 +24,7 @@ import FirstBlock from '@/assets/first-block.jpg'
 import Flower from '@/assets/flower.jpg'
 import { useRelationshipTimers } from '@/composables/useRelationshipTimers'
 
-const { timeElapsed, padNumber } = useRelationshipTimers()
+const { formatTimeUnitLabel, timeElapsed, padNumber } = useRelationshipTimers()
 
 const showLightbox = ref(false)
 const selectedImage = ref(null)
@@ -137,17 +137,17 @@ onUnmounted(() => {
         <h1 class="mb-8 text-center text-3xl font-bold tracking-tight text-slate-800 sm:text-5xl">Вместе навсегда</h1>
         <div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
           <div
-            v-for="(value, label) in {
-              дней: timeElapsed.days,
-              часов: padNumber(timeElapsed.hours),
-              минут: padNumber(timeElapsed.minutes),
-              секунд: padNumber(timeElapsed.seconds),
-            }"
-            :key="label"
+            v-for="item in [
+              { value: timeElapsed.days, label: formatTimeUnitLabel('days', timeElapsed.days) },
+              { value: padNumber(timeElapsed.hours), label: formatTimeUnitLabel('hours', timeElapsed.hours) },
+              { value: padNumber(timeElapsed.minutes), label: formatTimeUnitLabel('minutes', timeElapsed.minutes) },
+              { value: padNumber(timeElapsed.seconds), label: formatTimeUnitLabel('seconds', timeElapsed.seconds) },
+            ]"
+            :key="item.label"
             class="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-5 text-center shadow-sm"
           >
-            <div class="text-3xl font-bold tabular-nums text-slate-800">{{ value }}</div>
-            <div class="mt-1 text-sm text-slate-500">{{ label }}</div>
+            <div class="text-3xl font-bold tabular-nums text-slate-800">{{ item.value }}</div>
+            <div class="mt-1 text-sm text-slate-500">{{ item.label }}</div>
           </div>
         </div>
         <p class="text-center text-base text-slate-500 sm:text-lg">Каждая минута с тобой - бесценна</p>

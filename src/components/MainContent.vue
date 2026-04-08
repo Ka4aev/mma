@@ -30,6 +30,14 @@ const { celebrate } = useCelebrate()
           >
             2
           </RouterLink>
+          <RouterLink
+            to="/3"
+            class="flex h-11 min-w-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition-all duration-300"
+            active-class="bg-emerald-600 text-white shadow-[0_12px_32px_rgba(5,150,105,0.34)]"
+            exact-active-class="bg-emerald-600 text-white shadow-[0_12px_32px_rgba(5,150,105,0.34)]"
+          >
+            3
+          </RouterLink>
         </div>
       </div>
 

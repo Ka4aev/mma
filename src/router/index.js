@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import PageOne from '@/pages/PageOne.vue'
 import PageTwo from '@/pages/PageTwo.vue'
+import PageThree from '@/pages/PageThree.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,6 +22,11 @@ const router = createRouter({
       path: '/2',
       name: 'page-two',
       component: PageTwo,
+    },
+    {
+      path: '/3',
+      name: 'page-three',
+      component: PageThree,
     },
     {
       path: '/:pathMatch(.*)*',
